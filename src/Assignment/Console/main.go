@@ -9,6 +9,7 @@ import (
 	"strconv"
 )
 
+// --- STRUCTS ---
 type Passenger struct {
 	PassengerID int
 	FirstName   string
@@ -36,12 +37,14 @@ type Trip struct {
 	DriverID    int
 }
 
-const driversBaseURL = "http://localhost:5000/api/drivers"
-const passengersBaseURL = "http://localhost:5000/api/passengers"
-const tripsBaseURL = "http://localhost:5000/api/trips"
+const driversBaseURL = "http://localhost:5000/api/v1/drivers"
+const passengersBaseURL = "http://localhost:5000/api/v1/passengers"
+const tripsBaseURL = "http://localhost:5000/api/v1/trips"
 const key = "2c78afaf-97da-4816-bbee-9ad239abb296"
 
 var userinput = ""
+var d Driver
+var p Passenger
 
 func Menu() {
 	fmt.Println("---Main Menu---")
@@ -70,21 +73,38 @@ func Menu() {
 }
 
 func LoginPassenger() {
+	var err error
+
 	fmt.Println("---Passenger Login---")
 	fmt.Println("Enter your Passenger ID:")
 	fmt.Scanln(&userinput)
 
-	//if success, go to passenger menu
-	PassengerMenu()
+	p.PassengerID, err = strconv.Atoi(userinput)
+
+	if err != nil {
+		fmt.Println("Please enter a valid Passenger ID")
+		LoginPassenger()
+	} else {
+		//if success, go to passenger menu
+		PassengerMenu()
+	}
 }
 
 func LoginDriver() {
+	var err error
 	fmt.Println("---Driver Login---")
 	fmt.Println("Enter your Driver ID:")
 	fmt.Scanln(&userinput)
 
-	//if success, go to driver menu
-	DriverMenu()
+	d.DriverID, err = strconv.Atoi(userinput)
+
+	if err != nil {
+		fmt.Println("Please enter a valid Driver ID")
+		LoginDriver()
+	} else {
+		//if success, go to driver menu
+		DriverMenu()
+	}
 }
 
 func CreatePassengerAccount() {
@@ -148,7 +168,7 @@ func CreateDriverAccount() {
 
 func PassengerMenu() {
 	fmt.Println("---Passenger Menu---")
-	fmt.Println("Passenger ID:" + "1") //passenger id
+	fmt.Printf("Passenger ID: %d\n", p.PassengerID)
 	fmt.Println("1. Update Information")
 	fmt.Println("2. Request a Trip")
 	fmt.Println("3. View All Trips")
@@ -198,12 +218,21 @@ func UpdatePassengerInformation() {
 }
 
 func RequestATrip() {
+	var pickup, dropoff string
+	id := 1
 
 	fmt.Println("---Request a Trip---")
 	fmt.Println("Pickup Postal Code:")
-	fmt.Scanln(&userinput)
+	fmt.Scanln(&pickup)
 	fmt.Println("Dropoff Postal Code:")
-	fmt.Scanln(&userinput)
+	fmt.Scanln(&dropoff)
+
+	jsonData := map[string]string{"Pickup": "", "Dropoff": "", "Assigned": "Unassigned"}
+	jsonData["FirstName"] = pickup
+	jsonData["LastName"] = dropoff
+
+	addTrip(strconv.Itoa(id), jsonData)
+	id += 1
 
 	fmt.Println("Trip Requested! Going back to Passenger Menu...")
 	PassengerMenu()
@@ -212,11 +241,13 @@ func RequestATrip() {
 func ViewAllTrips() {
 	fmt.Println("---View All Trips---")
 	getTrips("")
+	PassengerMenu()
 }
 
 func DriverMenu() {
+
 	fmt.Println("---Driver Menu---")
-	fmt.Println("Driver ID:" + "!") //driver id
+	fmt.Printf("Driver ID: %d\n", d.DriverID) //driver id
 	fmt.Println("1. Update Information")
 	fmt.Println("2. Start Trip")
 	fmt.Println("0. Logout")
@@ -237,11 +268,6 @@ func DriverMenu() {
 
 func UpdateDriverInformation() {
 	fmt.Println("---Update Driver Information---")
-	// UpdateInformation()
-	// fmt.Println("5. Identification No")
-	// fmt.Println("6. Car License No")
-	// fmt.Println("0. Back to Driver Menu")
-	// fmt.Scanln(&userinput)
 
 	id := 1
 	var firstName, lastName, mobileNo, email, identificationNo, carLicenseNo string
@@ -269,19 +295,22 @@ func UpdateDriverInformation() {
 
 	updateDriver(strconv.Itoa(id), jsonData)
 	id += 1
+
+	DriverMenu()
 }
 
 func DriverTrip() {
+	var t Trip
 	//display all unassigned trips
 	fmt.Println("---Driver Trip Menu---")
-	fmt.Println("Trip ID:" + "1") //trip id
+	fmt.Printf("Trip ID: %d\n", t.TripID) //trip id
 	fmt.Println("0. End Trip")
 
+	fmt.Scanln(&userinput)
 	if userinput == "0" {
 		DriverMenu()
 	}
 
-	fmt.Scanln(&userinput)
 }
 
 func UpdateInformation() {
@@ -327,7 +356,23 @@ func addPassenger(code string, jsonData map[string]string) {
 func addDriver(code string, jsonData map[string]string) {
 	jsonValue, _ := json.Marshal(jsonData)
 
-	response, err := http.Post(driversBaseURL+"/"+code+"?key="+key,
+	response, err := http.Post(tripsBaseURL+"/"+code+"?key="+key,
+		"application/json", bytes.NewBuffer(jsonValue))
+
+	if err != nil {
+		fmt.Printf("The HTTP request failed with error %s\n", err)
+	} else {
+		data, _ := ioutil.ReadAll(response.Body)
+		fmt.Println(response.StatusCode)
+		fmt.Println(string(data))
+		response.Body.Close()
+	}
+}
+
+func addTrip(code string, jsonData map[string]string) {
+	jsonValue, _ := json.Marshal(jsonData)
+
+	response, err := http.Post(tripsBaseURL+"/"+code+"?key="+key,
 		"application/json", bytes.NewBuffer(jsonValue))
 
 	if err != nil {

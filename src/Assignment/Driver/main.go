@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// --- STRUCT ---
 type Driver struct {
 	DriverID         int
 	FirstName        string
@@ -222,8 +223,8 @@ func main() {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/api/drivers", UserDriver).Methods("POST")
-	router.HandleFunc("/api/drivers/{driverid}", UserDriver).Methods(
+	router.HandleFunc("/api/v1/drivers", UserDriver).Methods("POST")
+	router.HandleFunc("/api/v1/drivers/{driverid}", UserDriver).Methods(
 		"GET", "PUT", "DELETE")
 
 	fmt.Println("Listening at port 5000")

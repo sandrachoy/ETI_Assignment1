@@ -7,11 +7,13 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 )
 
+// --- STRUCT ---
 type Trip struct {
 	TripID      int
 	Pickup      string
@@ -24,8 +26,8 @@ type Trip struct {
 var db *sql.DB
 
 func InsertTrip(db *sql.DB, trip Trip) {
-	query := fmt.Sprintf("INSERT INTO Trips VALUES ('%s', '%s', %d, %d)",
-		trip.Pickup, trip.Dropoff, trip.PassengerID, trip.DriverID)
+	query := fmt.Sprintf("INSERT INTO Trips VALUES ('%s', '%s', %s)",
+		trip.Pickup, trip.Dropoff, trip.Assigned)
 
 	_, err := db.Query(query)
 
@@ -35,13 +37,7 @@ func InsertTrip(db *sql.DB, trip Trip) {
 }
 
 func EditTrip(db *sql.DB, trip Trip) {
-	query := fmt.Sprintf(
-		"UPDATE Trips SET Pickup='%s', Dropoff='%s', Assigned='%s', PassengerID=%d, driverID=%d WHERE TripID=%d",
-		trip.Pickup, trip.Dropoff, trip.Assigned, trip.PassengerID, trip.DriverID, trip.TripID)
-	_, err := db.Query(query)
-	if err != nil {
-		panic(err.Error())
-	}
+	fmt.Println("Trip cannot be edited.")
 }
 
 func DeleteTrip(db *sql.DB, TID int) {
@@ -49,7 +45,7 @@ func DeleteTrip(db *sql.DB, TID int) {
 }
 
 func GetPassengerTripRecords(db *sql.DB) {
-	results, err := db.Query("Select * FROM assignment1_trip.Trips WHERE ")
+	results, err := db.Query("Select * FROM assignment1_trip.Trips")
 
 	if err != nil {
 		panic(err.Error())
@@ -90,17 +86,17 @@ func GetByTripID(db *sql.DB, trip Trip) (Trip, bool) {
 	return trip, msg
 }
 
-// func CheckTripEmail(db *sql.DB, driver Driver) bool {
-// 	query := fmt.Sprintf("SELECT Email FROM assignment1_driver.Drivers")
-// 	var matchEmail string
+func CheckTripID(db *sql.DB, trip Trip) bool {
+	query := fmt.Sprintf("SELECT TripID FROM assignment1_trip.Trips")
+	var matchTripID int
 
-// 	results := db.QueryRow(query)
+	results := db.QueryRow(query)
 
-// 	results.Scan(&matchEmail)
+	results.Scan(&matchTripID)
 
-// 	return matchEmail == driver.Email
+	return matchTripID == trip.TripID
+}
 
-// }
 func validKey(r *http.Request) bool {
 	v := r.URL.Query()
 	if key, ok := v["key"]; ok {
@@ -120,8 +116,6 @@ func PassengerTrip(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("401 - Invalid key"))
 		return
 	}
-
-	// params := mux.Vars(r)
 
 	if r.Method == "GET" {
 		var trip Trip
@@ -158,17 +152,17 @@ func PassengerTrip(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				// var match = CheckTripEmail(db, driver)
+				var match = CheckTripID(db, trip)
 
-				// if match {
-				// 	w.WriteHeader(http.StatusConflict)
-				// 	w.Write([]byte(
-				// 		"409 - Duplicate Trip ID"))
-				// } else {
-				// 	InsertTrip(db, trip)
-				// 	w.WriteHeader(http.StatusCreated)
-				// 	w.Write([]byte("201 - Trip added: " + strconv.Itoa(trip.TripID)))
-				// }
+				if match {
+					w.WriteHeader(http.StatusConflict)
+					w.Write([]byte(
+						"409 - Duplicate Trip ID"))
+				} else {
+					InsertTrip(db, trip)
+					w.WriteHeader(http.StatusCreated)
+					w.Write([]byte("201 - Trip added: " + strconv.Itoa(trip.TripID)))
+				}
 
 			} else {
 				w.WriteHeader(
@@ -177,9 +171,10 @@ func PassengerTrip(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// PUT - Create or update existing Driver
+		// PUT - Update existing Trip
 		if r.Method == "PUT" {
-
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte("401 - Trip cannot be edited"))
 		}
 	}
 }
@@ -196,9 +191,9 @@ func main() {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/api/trips", GetPassengerTripRecords).Methods("GET")
-	router.HandleFunc("/api/trips", PassengerTrip).Methods("POST")
-	router.HandleFunc("/api/trips/{tripid}", PassengerTrip).Methods(
+	router.HandleFunc("/api/v1/trips", GetPassengerTripRecords).Methods("GET")
+	router.HandleFunc("/api/v1/trips", PassengerTrip).Methods("POST")
+	router.HandleFunc("/api/v1/trips/{tripid}", PassengerTrip).Methods(
 		"GET", "PUT", "DELETE")
 
 	fmt.Println("Listening at port 5000")

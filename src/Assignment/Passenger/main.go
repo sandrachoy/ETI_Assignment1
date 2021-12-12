@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// --- STRUCT ---
 type Passenger struct {
 	PassengerID int
 	FirstName   string
@@ -220,8 +221,8 @@ func main() {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/api/passengers", UserPassenger).Methods("POST")
-	router.HandleFunc("/api/passengers/{passengerid}", UserPassenger).Methods(
+	router.HandleFunc("/api/v1/passengers", UserPassenger).Methods("POST")
+	router.HandleFunc("/api/v1/passengers/{passengerid}", UserPassenger).Methods(
 		"GET", "PUT", "DELETE")
 
 	fmt.Println("Listening at port 5000")
