@@ -24,6 +24,7 @@ type Passenger struct {
 
 var db *sql.DB
 
+// --- FUNCTIONS ---
 func InsertPassenger(db *sql.DB, passenger Passenger) {
 	query := fmt.Sprintf("INSERT INTO Passengers VALUES ('%s', '%s', %d, %s)",
 		passenger.FirstName, passenger.LastName, passenger.MobileNo, passenger.Email)
@@ -209,6 +210,7 @@ func UserPassenger(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// --- MAIN FUNCTION ---
 func main() {
 	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/assignment1")
 

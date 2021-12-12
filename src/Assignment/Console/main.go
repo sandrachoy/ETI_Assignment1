@@ -37,6 +37,7 @@ type Trip struct {
 	DriverID    int
 }
 
+// CONNECTIONS AND ACCESS TOKEN
 const driversBaseURL = "http://localhost:5000/api/v1/drivers"
 const passengersBaseURL = "http://localhost:5000/api/v1/passengers"
 const tripsBaseURL = "http://localhost:5000/api/v1/trips"
@@ -247,7 +248,7 @@ func ViewAllTrips() {
 func DriverMenu() {
 
 	fmt.Println("---Driver Menu---")
-	fmt.Printf("Driver ID: %d\n", d.DriverID) //driver id
+	fmt.Printf("Driver ID: %d\n", d.DriverID)
 	fmt.Println("1. Update Information")
 	fmt.Println("2. Start Trip")
 	fmt.Println("0. Logout")

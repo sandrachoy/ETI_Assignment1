@@ -25,6 +25,7 @@ type Trip struct {
 
 var db *sql.DB
 
+// --- FUNCTIONS ---
 func InsertTrip(db *sql.DB, trip Trip) {
 	query := fmt.Sprintf("INSERT INTO Trips VALUES ('%s', '%s', %s)",
 		trip.Pickup, trip.Dropoff, trip.Assigned)
@@ -179,6 +180,7 @@ func PassengerTrip(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// --- MAIN FUNCTION ---
 func main() {
 	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/assignment1_trip")
 

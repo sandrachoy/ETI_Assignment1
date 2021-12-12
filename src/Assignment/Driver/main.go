@@ -25,6 +25,8 @@ type Driver struct {
 
 var db *sql.DB
 
+// --- FUNCTIONS --
+
 func InsertDriver(db *sql.DB, driver Driver) {
 	query := fmt.Sprintf("INSERT INTO Drivers VALUES ('%s', '%s', %d, '%s', '%s', '%s')",
 		driver.FirstName, driver.LastName, driver.MobileNo, driver.Email, driver.IdentificationNo, driver.CarLicenseNo)
@@ -183,7 +185,7 @@ func UserDriver(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		// PUT - Create or update existing Driver
+		// PUT - Update existing Driver
 		if r.Method == "PUT" {
 			var driver Driver
 			reqBody, err := ioutil.ReadAll(r.Body)
@@ -211,6 +213,7 @@ func UserDriver(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// --- MAIN FUNCTION ---
 func main() {
 	db, err := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/assignment1_driver")
 
